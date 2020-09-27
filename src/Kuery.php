@@ -81,12 +81,12 @@ class Kuery
         return $result->fetch_object($class_name);
     }
 
-    public function getAllRows(string $class_name = 'stdClass'): ?array
+    public function getAllRows(string $class_name = 'stdClass'): array
     {
         $result = $this->getResult();
 
         if ($result === null) {
-            return null;
+            return [];
         }
 
         $rows = [];

@@ -67,7 +67,7 @@ class KueryTest extends TestCase
         $stmt = $kuery->run('SELECT * FROM users WHERE id = ?', [0], 'i');
         $users = $kuery->getAllRows();
         
-        $this->assertTrue($users === null);
+        $this->assertTrue($users === []);
 
     }
 }
