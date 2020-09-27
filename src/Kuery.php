@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Falgun\Kuery;
 
 use mysqli;
+use stdClass;
 use mysqli_stmt;
 use mysqli_result;
 use Falgun\Kuery\Connection\ConnectionInterface;
@@ -70,7 +71,7 @@ class Kuery
         return true;
     }
 
-    public function getSingleRow(string $class_name = 'stdClass'): ?object
+    public function getSingleRow(string $class_name = \stdClass::class): ?object
     {
         $result = $this->getResult();
 
@@ -81,7 +82,7 @@ class Kuery
         return $result->fetch_object($class_name);
     }
 
-    public function getAllRows(string $class_name = 'stdClass'): array
+    public function getAllRows(string $class_name = \stdClass::class): array
     {
         $result = $this->getResult();
 
@@ -101,7 +102,7 @@ class Kuery
         return $rows;
     }
 
-    public function yieldAllRows(string $class_name = 'stdClass'): \Generator
+    public function yieldAllRows(string $class_name = \stdClass::class): \Generator
     {
         $result = $this->getResult();
 
