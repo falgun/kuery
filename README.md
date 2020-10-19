@@ -35,12 +35,12 @@ $connection = new MySqlConnection($configuration);
 $connection->connect();
 
 // get all active users
-$kuery->run('SELECT * FROM users WHERE status = ? ORDER BY id asc', [1], 'i');
-$users = $kuery->getAllRows(); //array
+$stmt = $kuery->run('SELECT * FROM users WHERE status = ? ORDER BY id asc', [1], 'i');
+$users = $kuery->getAllRows($stmt); //array
 
 // get a single user who has id = 1
-$kuery->run('SELECT * FROM users WHERE id = ? ORDER BY id asc LIMIT 1', [1], 'i');
-$user = $kuery->getSingleRow();
+$stmt = $kuery->run('SELECT * FROM users WHERE id = ? ORDER BY id asc LIMIT 1', [1], 'i');
+$user = $kuery->getSingleRow($stmt);
 
 // insert a row
 $kuery->run('INSERT INTO users (username, email) values ("UserName", "email@site.com")');

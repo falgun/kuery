@@ -6,20 +6,20 @@ namespace Falgun\Kuery\Connection;
 use mysqli;
 use Falgun\Kuery\Configuration;
 
-class MySqlConnection implements ConnectionInterface
+final class MySqlConnection implements ConnectionInterface
 {
 
-    protected mysqli $connection;
-    protected Configuration $configuration;
+    private ?mysqli $connection;
+    private Configuration $configuration;
 
     public final function __construct(Configuration $configuration)
     {
         $this->configuration = $configuration;
+        $this->connection = null;
     }
 
     public function connect(): void
     {
-
         $connection = new mysqli(
             $this->configuration->host,
             $this->configuration->user,
@@ -39,11 +39,19 @@ class MySqlConnection implements ConnectionInterface
 
     public function disconnect(): bool
     {
+        if (isset($this->connection) === false) {
+            return true;
+        }
+
         return $this->connection->close();
     }
 
     public function getConnection(): mysqli
     {
+        if (isset($this->connection) === false) {
+            $this->connect();
+        }
+
         return $this->connection;
     }
 }

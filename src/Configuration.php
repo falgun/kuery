@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace Falgun\Kuery;
 
-class Configuration
+use InvalidArgumentException;
+
+final class Configuration
 {
 
     public string $host;
@@ -23,24 +25,30 @@ class Configuration
         $this->characterSet = $characterSet;
     }
 
-    public static function new(string $host, string $user, string $password, string $database, int $port = 3306, string $characterSet = 'utf8'): Configuration
+    public static function new(string $host, string $user, string $password, string $database, int $port = 3306, string $characterSet = 'utf8mb4'): self
     {
         return new static($host, $user, $password, $database, $port, $characterSet);
     }
 
-    public static function fromArray(array $configuration): Configuration
+    /**
+     * @param array<string, string|int> $configuration
+     * @return \self
+     * @throws InvalidArgumentException
+     * @psalm-suppress PossiblyInvalidArgument
+     */
+    public static function fromArray(array $configuration): self
     {
         if (isset($configuration['host']) === false) {
-            throw new \Exception('Configuration Array must contain "host" !');
+            throw new InvalidArgumentException('Configuration Array must contain "host"!');
         }
         if (isset($configuration['user']) === false) {
-            throw new \Exception('Configuration Array must contain "user" !');
+            throw new InvalidArgumentException('Configuration Array must contain "user"!');
         }
         if (isset($configuration['password']) === false) {
-            throw new \Exception('Configuration Array must contain "password" !');
+            throw new InvalidArgumentException('Configuration Array must contain "password"!');
         }
         if (isset($configuration['database']) === false) {
-            throw new \Exception('Configuration Array must contain "database" !');
+            throw new InvalidArgumentException('Configuration Array must contain "database"!');
         }
 
         $host = $configuration['host'];
@@ -48,7 +56,7 @@ class Configuration
         $password = $configuration['password'];
         $database = $configuration['database'];
         $port = $configuration['port'] ?? 3306;
-        $characterSet = $configuration['character-set'] ?? 'utf8';
+        $characterSet = $configuration['character-set'] ?? 'utf8mb4';
 
         return new static($host, $user, $password, $database, $port, $characterSet);
     }

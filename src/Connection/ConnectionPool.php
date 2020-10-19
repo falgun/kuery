@@ -5,14 +5,18 @@ namespace Falgun\Kuery\Connection;
 
 use Falgun\Kuery\Configuration;
 
-class ConnectionPool
+final class ConnectionPool
 {
 
-    protected array $connectionPool;
+    /** @var array<string, ConnectionInterface> */
+    private array $connections;
 
+    /**
+     * @param array<string, ConnectionInterface> $connections
+     */
     public final function __construct(array $connections = [])
     {
-        $this->connectionPool = $connections;
+        $this->connections = $connections;
     }
 
     public static function fromNewMySQL(string $key, Configuration $configuration): self
@@ -26,21 +30,21 @@ class ConnectionPool
 
     public function newMySQL(string $key, Configuration $configuration): ConnectionInterface
     {
-        return $this->connectionPool[$key] = new MySqlConnection($configuration);
+        return $this->connections[$key] = new MySqlConnection($configuration);
     }
 
     public function set(string $key, ConnectionInterface $connection): ConnectionInterface
     {
-        return $this->connectionPool[$key] = $connection;
+        return $this->connections[$key] = $connection;
     }
 
     public function get(string $key): ConnectionInterface
     {
-        return $this->connectionPool[$key];
+        return $this->connections[$key];
     }
 
     public function has(string $key): bool
     {
-        return isset($this->connectionPool[$key]);
+        return isset($this->connections[$key]);
     }
 }

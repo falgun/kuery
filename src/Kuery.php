@@ -3,19 +3,16 @@ declare(strict_types=1);
 
 namespace Falgun\Kuery;
 
-use mysqli;
-use stdClass;
 use mysqli_stmt;
 use mysqli_result;
 use Falgun\Kuery\Connection\ConnectionInterface;
 use Falgun\Kuery\Exception\InvalidStatementException;
 use Falgun\Kuery\Exception\InvalidBindParamException;
 
-class Kuery
+final class Kuery
 {
 
     protected ConnectionInterface $connection;
-    protected mysqli_stmt $stmt;
 
     public function __construct(ConnectionInterface $connection)
     {
@@ -24,16 +21,15 @@ class Kuery
 
     public function run(string $sql, array $values = [], string $bind = ''): mysqli_stmt
     {
-        $this->stmt = $this->prepare($sql);
-        $this->bind($bind, $values);
-        $this->execute();
+        $stmt = $this->prepare($sql);
+        $this->bind($stmt, $bind, $values);
+        $this->execute($stmt);
 
-        return $this->stmt;
+        return $stmt;
     }
 
     public function prepare(string $sql): mysqli_stmt
     {
-
         $stmt = $this->connection->getConnection()->prepare($sql);
 
         if ($stmt === false) {
@@ -45,7 +41,7 @@ class Kuery
         return $stmt;
     }
 
-    public function bind(string $bind, array $values): bool
+    public function bind(mysqli_stmt $stmt, string $bind, array $values): bool
     {
         $valueCount = \count($values);
         $bindCount = \strlen($bind);
@@ -58,22 +54,22 @@ class Kuery
             throw new InvalidBindParamException('Bind Param did not match with values');
         }
 
-        return $this->stmt->bind_param($bind, ...$values);
+        return $stmt->bind_param($bind, ...$values);
     }
 
-    public function execute(): bool
+    public function execute(mysqli_stmt $stmt): bool
     {
-        $this->stmt->execute();
+        $stmt->execute();
 
-        if (!empty($this->stmt->error)) {
-            throw new InvalidStatementException($this->stmt->error);
+        if (!empty($stmt->error)) {
+            throw new InvalidStatementException($stmt->error);
         }
         return true;
     }
 
-    public function getSingleRow(string $class_name = \stdClass::class): ?object
+    public function getSingleRow(mysqli_stmt $stmt, string $class_name = \stdClass::class): ?object
     {
-        $result = $this->getResult();
+        $result = $this->getResult($stmt);
 
         if ($result === null) {
             return null;
@@ -82,9 +78,9 @@ class Kuery
         return $result->fetch_object($class_name);
     }
 
-    public function getAllRows(string $class_name = \stdClass::class): array
+    public function getAllRows(mysqli_stmt $stmt, string $class_name = \stdClass::class): array
     {
-        $result = $this->getResult();
+        $result = $this->getResult($stmt);
 
         if ($result === null) {
             return [];
@@ -93,32 +89,30 @@ class Kuery
         $rows = [];
 
         while ($row = $result->fetch_object($class_name)) {
-            if ($row === null) {
-                break;
-            }
             $rows[] = $row;
         }
 
         return $rows;
     }
 
-    public function yieldAllRows(string $class_name = \stdClass::class): \Generator
+    public function yieldAllRows(mysqli_stmt $stmt, string $class_name = \stdClass::class): \Generator
     {
-        $result = $this->getResult();
+        $result = $this->getResult($stmt);
 
-        if ($result !== null) {
-            yield $result->fetch_object($class_name);
-        } else {
-            yield [];
+        if ($result === null) {
+            yield from [];
+            return;
         }
+
+        yield $result->fetch_object($class_name);
     }
 
-    public function getResult(): ?mysqli_result
+    public function getResult(mysqli_stmt $stmt): ?mysqli_result
     {
-        $result = $this->stmt->get_result();
+        $result = $stmt->get_result();
 
         if ($result === false) {
-            throw new InvalidStatementException('No result rows are available for this query');
+            throw new InvalidStatementException('Result rows are only available for SELECT queries!');
         }
 
         if ($result->num_rows === 0) {
@@ -126,12 +120,5 @@ class Kuery
         }
 
         return $result;
-    }
-
-    public function closeStatement(): bool
-    {
-        unset($this->stmt);
-        return true;
-        // return $this->stmt->close();
     }
 }
