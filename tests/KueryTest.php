@@ -95,7 +95,6 @@ class KueryTest extends TestCase
     {
         $kuery = $this->getKuery();
 
-
         $insertStmt = $kuery->run('INSERT INTO users (username, email) values ("YieldAllAtaur", "email@site.com")');
 
         $stmt = $kuery->run('SELECT * FROM users WHERE id > ?', [0], 'i');
@@ -129,7 +128,7 @@ class KueryTest extends TestCase
 
         $this->expectException(InvalidBindParamException::class);
 
-        $kuery->bind($stmt, 'i', ['a', 'b']);
+        $kuery->bind($stmt, ['a', 'b'], 'i');
     }
 
 //    public function testInvalidExecute()
@@ -201,5 +200,62 @@ class KueryTest extends TestCase
         $result = $kuery->execute($stmt);
 
         $this->assertSame(true, $result);
+    }
+
+    public function testInvalidBindType()
+    {
+        $kuery = $this->getKuery();
+
+        $kuery->run('INSERT INTO users (username, email, score) values ("AtaurScore", "email@site.com", 2.01)');
+
+        try {
+            $kuery->run('SELECT * FROM users LIMIT ?,?', ['0', '5'], 'sz');
+            $this->fail();
+        } catch (\Throwable $ex) {
+            $this->assertSame('mysqli_stmt::bind_param(): Undefined fieldtype z (parameter 3)', $ex->getMessage());
+        }
+    }
+
+    public function testMultipleExecution()
+    {
+        $kuery = $this->getKuery();
+
+        $id = 1;
+
+        $stmt = $kuery->prepare('SELECT * FROM users WHERE id = ?');
+        $kuery->bind($stmt, [&$id], 'i');
+
+        $kuery->execute($stmt);
+        $result = $kuery->getSingleRow($stmt);
+
+        $this->assertSame(1, $result->id);
+
+        $id = 2;
+        $kuery->execute($stmt);
+        $result2 = $kuery->getSingleRow($stmt);
+
+        $this->assertSame(2, $result2->id);
+    }
+
+    public function testBindAutoResulation()
+    {
+        $kuery = $this->getKuery();
+
+        $stmt = $kuery->run('SELECT * FROM users WHERE id < ? AND score > ? AND status = ?',
+            [10, 1.1, 0]
+        );
+
+        $users = $kuery->getAllRows($stmt);
+
+        $this->assertTrue(!empty($users));
+    }
+
+    public function testEmptyBind()
+    {
+        $kuery = $this->getKuery();
+
+        $stmt = $kuery->run('SELECT * FROM users');
+
+        $this->assertTrue($kuery->bind($stmt));
     }
 }

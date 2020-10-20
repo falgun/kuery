@@ -19,10 +19,16 @@ final class Kuery
         $this->connection = $connection;
     }
 
+    /**
+     * @param string $sql
+     * @param array<int, mixed> $values
+     * @param string $bind
+     * @return mysqli_stmt
+     */
     public function run(string $sql, array $values = [], string $bind = ''): mysqli_stmt
     {
         $stmt = $this->prepare($sql);
-        $this->bind($stmt, $bind, $values);
+        $this->bind($stmt, $values, $bind);
         $this->execute($stmt);
 
         return $stmt;
@@ -41,20 +47,29 @@ final class Kuery
         return $stmt;
     }
 
-    public function bind(mysqli_stmt $stmt, string $bind, array $values): bool
+    /**
+     * @param mysqli_stmt $stmt
+     * @param array<int, mixed> $values
+     * @param string $bind
+     * @return bool
+     * @throws InvalidBindParamException
+     * @see https://stackoverflow.com/questions/51138463/mysqli-stmtbind-param-specify-another-data-type-than-s-for-each-paramete
+     */
+    public function bind(mysqli_stmt $stmt, array $values = [], string $bind = ''): bool
     {
-        $valueCount = \count($values);
-        $bindCount = \strlen($bind);
-
-        if (empty($valueCount)) {
+        if (empty($values) && empty($bind)) {
             return true;
         }
+
+        $valueCount = \count($values);
+        $bindTypes = $bind ?: \str_repeat('s', $valueCount);
+        $bindCount = \strlen($bindTypes);
 
         if ($valueCount !== $bindCount) {
             throw new InvalidBindParamException('Bind Param did not match with values');
         }
 
-        return $stmt->bind_param($bind, ...$values);
+        return $stmt->bind_param($bindTypes, ...$values);
     }
 
     public function execute(mysqli_stmt $stmt): bool
@@ -67,7 +82,7 @@ final class Kuery
         return true;
     }
 
-    public function getSingleRow(mysqli_stmt $stmt, string $class_name = \stdClass::class): ?object
+    public function getSingleRow(mysqli_stmt $stmt, string $className = \stdClass::class): ?object
     {
         $result = $this->getResult($stmt);
 
@@ -75,10 +90,10 @@ final class Kuery
             return null;
         }
 
-        return $result->fetch_object($class_name);
+        return $result->fetch_object($className);
     }
 
-    public function getAllRows(mysqli_stmt $stmt, string $class_name = \stdClass::class): array
+    public function getAllRows(mysqli_stmt $stmt, string $className = \stdClass::class): array
     {
         $result = $this->getResult($stmt);
 
@@ -88,14 +103,14 @@ final class Kuery
 
         $rows = [];
 
-        while ($row = $result->fetch_object($class_name)) {
+        while ($row = $result->fetch_object($className)) {
             $rows[] = $row;
         }
 
         return $rows;
     }
 
-    public function yieldAllRows(mysqli_stmt $stmt, string $class_name = \stdClass::class): \Generator
+    public function yieldAllRows(mysqli_stmt $stmt, string $className = \stdClass::class): \Generator
     {
         $result = $this->getResult($stmt);
 
@@ -104,7 +119,7 @@ final class Kuery
             return;
         }
 
-        yield $result->fetch_object($class_name);
+        yield $result->fetch_object($className);
     }
 
     public function getResult(mysqli_stmt $stmt): ?mysqli_result

@@ -11,6 +11,7 @@
     convertWarningsToExceptions="true"
     processIsolation="false"
     stopOnFailure="false"
+    executionOrder="default"
     printerClass="Sempro\PHPUnitPrettyPrinter\PrettyPrinterForPhpUnit9"
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
 >
