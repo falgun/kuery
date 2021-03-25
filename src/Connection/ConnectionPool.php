@@ -14,7 +14,7 @@ final class ConnectionPool
     /**
      * @param array<string, ConnectionInterface> $connections
      */
-    public final function __construct(array $connections = [])
+    public function __construct(array $connections = [])
     {
         $this->connections = $connections;
     }

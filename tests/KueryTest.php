@@ -231,7 +231,8 @@ class KueryTest extends TestCase
     {
         $kuery = $this->getKuery();
 
-        $stmt = $kuery->run('SELECT * FROM users WHERE id < ? AND score > ? AND status = ?',
+        $stmt = $kuery->run(
+            'SELECT * FROM users WHERE id < ? AND score > ? AND status = ?',
             [10, 1.1, 0]
         );
 

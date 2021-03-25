@@ -15,7 +15,7 @@ final class Configuration
     public int $port;
     public string $characterSet;
 
-    private final function __construct(string $host, string $user, string $password, string $database, int $port, string $characterSet)
+    private function __construct(string $host, string $user, string $password, string $database, int $port, string $characterSet)
     {
         $this->host = $host;
         $this->user = $user;

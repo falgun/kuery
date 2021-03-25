@@ -72,8 +72,10 @@ class ConnectionTest extends TestCase
             $connection->connect();
             $this->fail();
         } catch (\Throwable $ex) {
-            $this->assertSame("mysqli::__construct(): (HY000/1045): Access denied for user 'invaliduser'@'localhost' (using password: YES)",
-                $ex->getMessage());
+            $this->assertSame(
+                "mysqli::__construct(): (HY000/1045): Access denied for user 'invaliduser'@'localhost' (using password: YES)",
+                $ex->getMessage()
+            );
         }
     }
 

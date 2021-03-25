@@ -12,7 +12,7 @@ final class MySqlConnection implements ConnectionInterface
     private ?mysqli $connection;
     private Configuration $configuration;
 
-    public final function __construct(Configuration $configuration)
+    public function __construct(Configuration $configuration)
     {
         $this->configuration = $configuration;
         $this->connection = null;
