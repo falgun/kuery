@@ -1,0 +1,8 @@
+grumphp:
+    tasks: {
+        phpcs: {
+            standard: ['PSR2']
+        },
+        phpunit: null,
+        psalm: null
+    }
