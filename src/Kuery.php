@@ -12,7 +12,7 @@ use Falgun\Kuery\Exception\InvalidBindParamException;
 final class Kuery
 {
 
-    protected ConnectionInterface $connection;
+    private ConnectionInterface $connection;
 
     public function __construct(ConnectionInterface $connection)
     {
@@ -82,7 +82,7 @@ final class Kuery
         return true;
     }
 
-    public function getSingleRow(mysqli_stmt $stmt, string $className = \stdClass::class): ?object
+    public function fetchOne(mysqli_stmt $stmt, string $className = \stdClass::class): ?object
     {
         $result = $this->getResult($stmt);
 
@@ -93,7 +93,18 @@ final class Kuery
         return $result->fetch_object($className);
     }
 
-    public function getAllRows(mysqli_stmt $stmt, string $className = \stdClass::class): array
+    public function fetchOneAsArray(mysqli_stmt $stmt): ?array
+    {
+        $result = $this->getResult($stmt);
+
+        if ($result === null) {
+            return null;
+        }
+
+        return $result->fetch_assoc();
+    }
+
+    public function fetchAll(mysqli_stmt $stmt, string $className = \stdClass::class): array
     {
         $result = $this->getResult($stmt);
 
@@ -110,7 +121,24 @@ final class Kuery
         return $rows;
     }
 
-    public function yieldAllRows(mysqli_stmt $stmt, string $className = \stdClass::class): \Generator
+    public function fetchAllAsArray(mysqli_stmt $stmt): array
+    {
+        $result = $this->getResult($stmt);
+
+        if ($result === null) {
+            return [];
+        }
+
+        $rows = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    public function yieldAll(mysqli_stmt $stmt, string $className = \stdClass::class): \Generator
     {
         $result = $this->getResult($stmt);
 
@@ -120,6 +148,18 @@ final class Kuery
         }
 
         yield $result->fetch_object($className);
+    }
+
+    public function yieldAllAsArray(mysqli_stmt $stmt): \Generator
+    {
+        $result = $this->getResult($stmt);
+
+        if ($result === null) {
+            yield from [];
+            return;
+        }
+
+        yield $result->fetch_assoc();
     }
 
     public function getResult(mysqli_stmt $stmt): ?mysqli_result

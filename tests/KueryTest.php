@@ -56,9 +56,23 @@ class KueryTest extends TestCase
 
         $selectStmt = $kuery->run('SELECT * FROM users WHERE username = ? LIMIT 1', ['SelectAtaur'], 's');
         $this->assertTrue($selectStmt instanceof \mysqli_stmt);
-        $user = $kuery->getSingleRow($selectStmt);
+        $user = $kuery->fetchOne($selectStmt);
 
         $this->assertSame('SelectAtaur', $user->username);
+    }
+
+    public function testSelectAsArrayAfterInsert()
+    {
+        $kuery = $this->getKuery();
+
+        $insertStmt = $kuery->run('INSERT INTO users (username, email) values ("SelectAtaur", "email@site.com")');
+
+        $selectStmt = $kuery->run('SELECT * FROM users WHERE username = ? LIMIT 1', ['SelectAtaur'], 's');
+        $this->assertTrue($selectStmt instanceof \mysqli_stmt);
+
+        $user = $kuery->fetchOneAsArray($selectStmt);
+
+        $this->assertSame('SelectAtaur', $user['username']);
     }
 
     public function testAllRows()
@@ -68,7 +82,7 @@ class KueryTest extends TestCase
         $insertStmt = $kuery->run('INSERT INTO users (username, email) values ("SelectAllAtaur", "email@site.com")');
 
         $stmt = $kuery->run('SELECT * FROM users WHERE id > ?', [0], 'i');
-        $users = $kuery->getAllRows($stmt);
+        $users = $kuery->fetchAll($stmt);
 
         $this->assertTrue(is_array($users));
 
@@ -81,6 +95,26 @@ class KueryTest extends TestCase
         $this->assertTrue($rows > 0, 'Did not return any rows, expected all rows');
     }
 
+    public function testAllRowsAsArray()
+    {
+        $kuery = $this->getKuery();
+
+        $insertStmt = $kuery->run('INSERT INTO users (username, email) values ("SelectAllAtaur", "email@site.com")');
+
+        $stmt = $kuery->run('SELECT * FROM users WHERE id > ?', [0], 'i');
+        $users = $kuery->fetchAllAsArray($stmt);
+
+        $this->assertTrue(is_array($users));
+
+        $rows = 0;
+        foreach ($users as $user) {
+            $rows++;
+            $this->assertIsArray($user);
+        }
+
+        $this->assertTrue($rows > 0, 'Did not return any rows, expected all rows');
+    }
+
     public function testYieldAllRows()
     {
         $kuery = $this->getKuery();
@@ -88,7 +122,7 @@ class KueryTest extends TestCase
         $insertStmt = $kuery->run('INSERT INTO users (username, email) values ("YieldAllAtaur", "email@site.com")');
 
         $stmt = $kuery->run('SELECT * FROM users WHERE id > ?', [0], 'i');
-        $users = $kuery->yieldAllRows($stmt);
+        $users = $kuery->yieldAll($stmt);
 
         $this->assertTrue($users instanceof \Generator);
 
@@ -96,6 +130,26 @@ class KueryTest extends TestCase
         foreach ($users as $user) {
             $rows++;
             $this->assertTrue($user instanceof \stdClass);
+        }
+
+        $this->assertTrue($rows > 0, 'Did not return any rows, expected all rows');
+    }
+
+    public function testYieldAllRowsAsArray()
+    {
+        $kuery = $this->getKuery();
+
+        $insertStmt = $kuery->run('INSERT INTO users (username, email) values ("YieldAllAtaur", "email@site.com")');
+
+        $stmt = $kuery->run('SELECT * FROM users WHERE id > ?', [0], 'i');
+        $users = $kuery->yieldAllAsArray($stmt);
+
+        $this->assertTrue($users instanceof \Generator);
+
+        $rows = 0;
+        foreach ($users as $user) {
+            $rows++;
+            $this->assertIsArray($user);
         }
 
         $this->assertTrue($rows > 0, 'Did not return any rows, expected all rows');
@@ -150,7 +204,18 @@ class KueryTest extends TestCase
 
         $stmt = $kuery->run('SELECT * FROM users WHERE id = 0 LIMIT 1');
 
-        $user = $kuery->getSingleRow($stmt);
+        $user = $kuery->fetchOne($stmt);
+
+        $this->assertSame(null, $user);
+    }
+
+    public function testSingleArrayRowNotFound()
+    {
+        $kuery = $this->getKuery();
+
+        $stmt = $kuery->run('SELECT * FROM users WHERE id = 0 LIMIT 1');
+
+        $user = $kuery->fetchOneAsArray($stmt);
 
         $this->assertSame(null, $user);
     }
@@ -161,7 +226,7 @@ class KueryTest extends TestCase
 
         $stmt = $kuery->run('SELECT * FROM users WHERE id = 0');
 
-        $users = $kuery->getAllRows($stmt);
+        $users = $kuery->fetchAll($stmt);
 
         $this->assertSame([], $users);
     }
@@ -172,7 +237,7 @@ class KueryTest extends TestCase
 
         $stmt = $kuery->run('SELECT * FROM users WHERE id = 0');
 
-        $users = $kuery->yieldAllRows($stmt);
+        $users = $kuery->yieldAll($stmt);
 
         foreach ($users as $user) {
             $this->fail('Found data in empty yield');
@@ -202,7 +267,11 @@ class KueryTest extends TestCase
             $kuery->run('SELECT * FROM users LIMIT ?,?', ['0', '5'], 'sz');
             $this->fail();
         } catch (\Throwable $ex) {
-            $this->assertSame('mysqli_stmt::bind_param(): Argument #1 ($types) must only contain the "b", "d", "i", "s" type specifiers', $ex->getMessage());
+            $this->assertSame(
+                'mysqli_stmt::bind_param(): Argument #1 ($types) '
+                . 'must only contain the "b", "d", "i", "s" type specifiers',
+                $ex->getMessage()
+            );
         }
     }
 
@@ -216,13 +285,13 @@ class KueryTest extends TestCase
         $kuery->bind($stmt, [&$id], 'i');
 
         $kuery->execute($stmt);
-        $result = $kuery->getSingleRow($stmt);
+        $result = $kuery->fetchOne($stmt);
 
         $this->assertSame(1, $result->id);
 
         $id = 2;
         $kuery->execute($stmt);
-        $result2 = $kuery->getSingleRow($stmt);
+        $result2 = $kuery->fetchOne($stmt);
 
         $this->assertSame(2, $result2->id);
     }
@@ -236,7 +305,7 @@ class KueryTest extends TestCase
             [10, 1.1, 0]
         );
 
-        $users = $kuery->getAllRows($stmt);
+        $users = $kuery->fetchAll($stmt);
 
         $this->assertTrue(!empty($users));
     }
