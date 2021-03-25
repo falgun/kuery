@@ -5,9 +5,10 @@ namespace Falgun\Kuery\Connection;
 interface ConnectionInterface
 {
 
-    public function connect():void;
+    public function connect(): void;
 
     public function disconnect(): bool;
 
-    public function getConnection(): object;
+    /** @psalm-suppress MissingReturnType */
+    public function getConnection();
 }

@@ -202,7 +202,7 @@ class KueryTest extends TestCase
             $kuery->run('SELECT * FROM users LIMIT ?,?', ['0', '5'], 'sz');
             $this->fail();
         } catch (\Throwable $ex) {
-            $this->assertSame('mysqli_stmt::bind_param(): Undefined fieldtype z (parameter 3)', $ex->getMessage());
+            $this->assertSame('mysqli_stmt::bind_param(): Argument #1 ($types) must only contain the "b", "d", "i", "s" type specifiers', $ex->getMessage());
         }
     }
 
