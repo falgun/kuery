@@ -15,12 +15,7 @@ class ConnectionTest extends TestCase
 
     public function getValidConnection(): MySqlConnection
     {
-        $confArray = [
-            'host' => 'localhost',
-            'user' => 'root',
-            'password' => '',
-            'database' => 'falgun'
-        ];
+        $confArray = require __DIR__ . '/config.php';
 
         $configuration = Configuration::fromArray($confArray);
 
@@ -33,12 +28,7 @@ class ConnectionTest extends TestCase
 
     public function testValidConnection()
     {
-        $confArray = [
-            'host' => 'localhost',
-            'user' => 'root',
-            'password' => '',
-            'database' => 'falgun'
-        ];
+        $confArray = require __DIR__ . '/config.php';
 
         $configuration = Configuration::fromArray($confArray);
 
@@ -55,14 +45,9 @@ class ConnectionTest extends TestCase
 
         $this->assertSame('utf8mb4', $connection->getConnection()->character_set_name());
 
+        $confArray = require __DIR__ . '/config.php';
 
-        $confArray = [
-            'host' => 'localhost',
-            'user' => 'root',
-            'password' => '',
-            'database' => 'falgun',
-            'character-set' => 'utf8',
-        ];
+        $confArray['character-set'] = 'utf8';
 
         $configuration = Configuration::fromArray($confArray);
 

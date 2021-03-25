@@ -17,12 +17,7 @@ class KueryTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        $confArray = [
-            'host' => 'localhost',
-            'user' => 'root',
-            'password' => '',
-            'database' => 'falgun'
-        ];
+        $confArray = require __DIR__ . '/config.php';
 
         $configuration = Configuration::fromArray($confArray);
         $connection = new MySqlConnection($configuration);
@@ -35,12 +30,7 @@ class KueryTest extends TestCase
 
     public function getKuery(): Kuery
     {
-        $confArray = [
-            'host' => 'localhost',
-            'user' => 'root',
-            'password' => '',
-            'database' => 'falgun'
-        ];
+        $confArray = require __DIR__ . '/config.php';
 
         $configuration = Configuration::fromArray($confArray);
         $connection = new MySqlConnection($configuration);
