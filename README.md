@@ -3,7 +3,7 @@
 SQL statement executer.
 
 ## Install
- *Please note that PHP 7.4 or higher is required.*
+ *Please note that PHP 8.0 or higher is required.*
 
 Via Composer
 
@@ -36,11 +36,11 @@ $connection->connect();
 
 // get all active users
 $stmt = $kuery->run('SELECT * FROM users WHERE status = ? ORDER BY id asc', [1], 'i');
-$users = $kuery->getAllRows($stmt); //array
+$users = $kuery->fetchAll($stmt); //array
 
 // get a single user who has id = 1
 $stmt = $kuery->run('SELECT * FROM users WHERE id = ? ORDER BY id asc LIMIT 1', [1], 'i');
-$user = $kuery->getSingleRow($stmt);
+$user = $kuery->fetchOne($stmt);
 
 // insert a row
 $kuery->run('INSERT INTO users (username, email) values ("UserName", "email@site.com")');
